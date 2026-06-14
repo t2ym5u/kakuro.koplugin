@@ -20,6 +20,7 @@ local InputContainer  = require("ui/widget/container/inputcontainer")
 local Menu            = require("ui/widget/menu")
 local Size            = require("ui/size")
 local TextWidget      = require("ui/widget/textwidget")
+local TextViewer      = require("ui/widget/textviewer")
 local UIManager       = require("ui/uimanager")
 local VerticalGroup   = require("ui/widget/verticalgroup")
 local VerticalSpan    = require("ui/widget/verticalspan")
@@ -41,6 +42,45 @@ local DIFFICULTY_LABELS = {
 -- ---------------------------------------------------------------------------
 -- KakuroScreen
 -- ---------------------------------------------------------------------------
+
+local GAME_RULES = _([[
+Kakuro — Rules
+
+Fill the white cells with digits 1–9 so that each "run" sums to its clue value.
+
+Rules:
+• Across runs fill cells going right; down runs fill cells going down.
+• Each run's digits must sum exactly to the clue shown in the adjacent black triangle.
+• No digit may be repeated within a single run.
+• Black cells are walls; clue cells show the across clue (bottom-left triangle) and the down clue (top-right triangle).
+
+Tap a white cell to select it, then tap a digit button to enter a value.
+]])
+
+local GAME_RULES_FR = [[
+Kakuro — Règles
+
+Remplissez les cases blanches avec des chiffres de 1 à 9 de sorte que chaque "séquence" soit égale à son indice.
+
+Règles :
+• Une séquence "horizontale" remplit des cases vers la droite ; une séquence "verticale" remplit des cases vers le bas.
+• Les chiffres d'une séquence doivent sommer exactement à la valeur de l'indice dans le triangle noir adjacent.
+• Un chiffre ne peut pas être répété au sein d'une même séquence.
+• Les cases noires sont des murs ; les cases indices affichent l'indice horizontal (triangle bas-gauche) et l'indice vertical (triangle haut-droit).
+
+Appuyez sur une case blanche pour la sélectionner, puis sur un bouton chiffre pour entrer une valeur.
+]]
+
+local function showRules()
+    local lang = (G_reader_settings and G_reader_settings:readSetting("language") or "en"):sub(1, 2)
+    local text = (lang == "fr") and GAME_RULES_FR or GAME_RULES
+    UIManager:show(TextViewer:new{
+        title  = _("Rules"),
+        text   = text,
+        width  = math.floor(DeviceScreen:getWidth() * 0.9),
+        height = math.floor(DeviceScreen:getHeight() * 0.9),
+    })
+end
 
 local KakuroScreen = InputContainer:extend{}
 
@@ -125,6 +165,7 @@ function KakuroScreen:buildLayout()
                   callback = function() self:openDifficultyMenu() end },
                 { id = "show_result",     text = _("Show result"),
                   callback = function() self:toggleSolution() end },
+                { text = _("Rules"),  callback = showRules },
                 { text = _("Close"),      callback = function() self:onClose() end },
             },
         },
