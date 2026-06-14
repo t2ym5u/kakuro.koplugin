@@ -2,13 +2,22 @@
 
 A Kakuro plugin for [KOReader](https://github.com/koreader/koreader).
 
+
+## Screenshot
+
+*(Screenshot to be added.)*
+
+## Rules
+
+Fill each run of white cells with digits 1–9 that sum to the clue shown. No digit may be repeated within a single run. Runs are separated by shaded clue cells (across clue in bottom-left triangle, down clue in top-right triangle).
+
 ## Concept
 
 Kakuro is the numerical equivalent of a crossword puzzle. Fill white cells with
 digits 1–9 so that each horizontal and vertical run sums to the clue shown in the
 black cell to its left or above. No digit may repeat within a run.
 
-## Planned Features
+## Features
 
 - **Multiple grid sizes** — Small (6×6), Medium (9×9), Large (12×12)
 - **Three difficulty levels** — Easy, Medium, Hard
@@ -33,6 +42,7 @@ black cell to its left or above. No digit may repeat within a run.
 | New game | Tap **New game** |
 | Change grid size | Tap **Grid** |
 | Change difficulty | Tap **Diff** |
+| Show rules | Tap **Rules** |
 
 ## Why e-ink friendly?
 
