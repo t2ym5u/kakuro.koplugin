@@ -43,7 +43,7 @@ local DIFFICULTY_LABELS = {
 -- KakuroScreen
 -- ---------------------------------------------------------------------------
 
-local GAME_RULES = _([[
+local GAME_RULES_EN = _([[
 Kakuro — Rules
 
 Fill the white cells with digits 1–9 so that each "run" sums to its clue value.
@@ -73,7 +73,7 @@ Appuyez sur une case blanche pour la sélectionner, puis sur un bouton chiffre p
 
 local function showRules()
     local lang = (G_reader_settings and G_reader_settings:readSetting("language") or "en"):sub(1, 2)
-    local text = (lang == "fr") and GAME_RULES_FR or GAME_RULES
+    local text = (lang == "fr") and GAME_RULES_FR or GAME_RULES_EN
     UIManager:show(TextViewer:new{
         title  = _("Rules"),
         text   = text,
@@ -166,7 +166,7 @@ function KakuroScreen:buildLayout()
                 { id = "show_result",     text = _("Show result"),
                   callback = function() self:toggleSolution() end },
                 { text = _("Rules"),  callback = showRules },
-                { text = _("Close"),      callback = function() self:onClose() end },
+                self:makeCloseButtonConfig(),
             },
         },
     }
