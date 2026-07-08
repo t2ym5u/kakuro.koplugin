@@ -7,26 +7,20 @@ local function lrequire(name)
     return package.loaded[key]
 end
 
-local Blitbuffer      = require("ffi/blitbuffer")
 local ButtonTable     = require("ui/widget/buttontable")
 local Device          = require("device")
-local Font            = require("ui/font")
 local FrameContainer  = require("ui/widget/container/framecontainer")
-local Geom            = require("ui/geometry")
 local HorizontalGroup = require("ui/widget/horizontalgroup")
 local HorizontalSpan  = require("ui/widget/horizontalspan")
-local InfoMessage     = require("ui/widget/infomessage")
-local InputContainer  = require("ui/widget/container/inputcontainer")
 local Menu            = require("ui/widget/menu")
 local Size            = require("ui/size")
-local TextWidget      = require("ui/widget/textwidget")
-local TextViewer      = require("ui/widget/textviewer")
 local UIManager       = require("ui/uimanager")
 local VerticalGroup   = require("ui/widget/verticalgroup")
 local VerticalSpan    = require("ui/widget/verticalspan")
-local _               = require("gettext")
+local _               = require("i18n")
 local T               = require("ffi/util").template
 
+local ScreenBase        = require("screen_base")
 local KakuroBoard       = lrequire("board")
 local KakuroBoardWidget = lrequire("board_widget")
 
@@ -71,55 +65,15 @@ Règles :
 Appuyez sur une case blanche pour la sélectionner, puis sur un bouton chiffre pour entrer une valeur.
 ]]
 
-local function showRules()
-    local lang = (G_reader_settings and G_reader_settings:readSetting("language") or "en"):sub(1, 2)
-    local text = (lang == "fr") and GAME_RULES_FR or GAME_RULES_EN
-    UIManager:show(TextViewer:new{
-        title  = _("Rules"),
-        text   = text,
-        width  = math.floor(DeviceScreen:getWidth() * 0.9),
-        height = math.floor(DeviceScreen:getHeight() * 0.9),
-    })
-end
-
-local KakuroScreen = InputContainer:extend{}
+local KakuroScreen = ScreenBase:extend{ note_mode = false }
 
 function KakuroScreen:init()
-    self.dimen = Geom:new{ x = 0, y = 0, w = DeviceScreen:getWidth(), h = DeviceScreen:getHeight() }
-    self.covers_fullscreen = true
-    self.vertical_align    = "center"
-    self.note_mode         = false
-
-    if Device:hasKeys() then
-        self.key_events = { Close = { { Device.input.group.Back } } }
-    end
-
-    self.status_text = TextWidget:new{
-        text = _("Tap a white cell, then pick a digit."),
-        face = Font:getFace("smallinfofont"),
-    }
-
     local state = self.plugin:loadState()
     self.board  = KakuroBoard:new()
     if not self.board:load(state) then
         self.board:generate(self.plugin:getSetting("difficulty", "easy"))
     end
-
-    self:buildLayout()
-    UIManager:setDirty(self, function() return "ui", self.dimen end)
-end
-
-function KakuroScreen:paintTo(bb, x, y)
-    self.dimen.x = x
-    self.dimen.y = y
-    bb:paintRect(x, y, self.dimen.w, self.dimen.h, Blitbuffer.COLOR_WHITE)
-    local content_size = self.layout:getSize()
-    local offset_x     = x + math.floor((self.dimen.w - content_size.w) / 2)
-    local offset_y     = y
-    if self.vertical_align == "center" then
-        offset_y = offset_y + math.floor((self.dimen.h - content_size.h) / 2)
-    end
-    self.layout:paintTo(bb, offset_x, offset_y)
+    ScreenBase.init(self)
 end
 
 function KakuroScreen:serializeState()
@@ -165,7 +119,7 @@ function KakuroScreen:buildLayout()
                   callback = function() self:openDifficultyMenu() end },
                 { id = "show_result",     text = _("Show result"),
                   callback = function() self:toggleSolution() end },
-                { text = _("Rules"),  callback = showRules },
+                self:makeRulesButtonConfig(GAME_RULES_EN, GAME_RULES_FR),
                 self:makeCloseButtonConfig(),
             },
         },
@@ -223,18 +177,13 @@ function KakuroScreen:buildLayout()
             right_panel,
         }
     else
-        self.layout = VerticalGroup:new{
+        local content = VerticalGroup:new{
             align = "center",
-            VerticalSpan:new{ width = Size.span.vertical_large },
-            top_buttons,
-            VerticalSpan:new{ width = Size.span.vertical_large },
             board_frame,
             VerticalSpan:new{ width = Size.span.vertical_large },
             self.status_text,
-            VerticalSpan:new{ width = Size.span.vertical_large },
-            keypad,
-            VerticalSpan:new{ width = Size.span.vertical_large },
         }
+        self:buildPortraitLayout(top_buttons, content, keypad)
     end
     self[1] = self.layout
     self:_ensureShowButtonState()
@@ -272,7 +221,7 @@ function KakuroScreen:onDigit(d)
     self.plugin:saveState(self.board:serialize())
     self:updateUndoButton()
     if self.board:isSolved() then
-        UIManager:show(InfoMessage:new{ text = _("Congratulations! Puzzle solved!"), timeout = 4 })
+        self:showMessage(_("Congratulations! Puzzle solved!"), 4)
     end
 end
 
@@ -445,17 +394,6 @@ function KakuroScreen:updateStatus(message)
     end
     self.status_text:setText(status or "")
     UIManager:setDirty(self, function() return "ui", self.dimen end)
-end
-
--- ---------------------------------------------------------------------------
--- Close
--- ---------------------------------------------------------------------------
-
-function KakuroScreen:onClose()
-    self.plugin:saveState(self.board:serialize())
-    self.plugin:onScreenClosed()
-    UIManager:close(self)
-    UIManager:setDirty(nil, "full")
 end
 
 return KakuroScreen

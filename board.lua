@@ -1,5 +1,5 @@
 local UndoStack = require("undo_stack")
-local _         = require("gettext")
+local _         = require("i18n")
 
 -- ---------------------------------------------------------------------------
 -- Generator: build a valid Kakuro board from a template + backtracking
