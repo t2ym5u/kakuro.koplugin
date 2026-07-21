@@ -102,10 +102,6 @@ local function getRuns(layout, n_rows, n_cols, dir)
     return runs
 end
 
--- Min/max achievable sum for a run of length L with digits 1-9, no repeats
-local function minSum(len) return len * (len + 1) / 2 end
-local function maxSum(len) return len * (19 - len) / 2 end
-
 -- Backtracking solver: fill sol grid (white cells start at -1) satisfying all runs
 local function solveGrid(sol, across_runs, down_runs, n_rows, n_cols)
     local cell_across = {}
@@ -126,15 +122,6 @@ local function solveGrid(sol, across_runs, down_runs, n_rows, n_cols)
         for c = 1, n_cols do
             if sol[r][c] == -1 then white_cells[#white_cells + 1] = {r = r, c = c} end
         end
-    end
-
-    local function curSumRem(run)
-        local s, rem = 0, 0
-        for _, cell in ipairs(run.cells) do
-            local v = sol[cell.r][cell.c]
-            if v > 0 then s = s + v elseif v == -1 then rem = rem + 1 end
-        end
-        return s, rem
     end
 
     local function used(run)
@@ -162,21 +149,18 @@ local function solveGrid(sol, across_runs, down_runs, n_rows, n_cols)
             digits[i], digits[j] = digits[j], digits[i]
         end
 
+        -- No sum target to hit here: the puzzle's clue numbers are derived
+        -- from whatever solution this search lands on (see the acl/dcl
+        -- computation below), so the only real constraint is "no repeated
+        -- digit within a run" (already enforced by ua/ud above). Previously
+        -- this also required matching a sum picked independently at random
+        -- per run *before* solving — nearly always infeasible for runs that
+        -- share cells, which made generation fail ~100% of the time and fall
+        -- back to the same fixed emergency puzzle.
         for _, d in ipairs(digits) do
             if not ua[d] and not ud[d] then
                 sol[r][c] = d
-                local ok  = true
-
-                if arun then
-                    local s, rem = curSumRem(arun)
-                    ok = rem == 0 and s == arun.target or rem > 0 and s < arun.target and arun.target - s >= rem
-                end
-                if ok and drun then
-                    local s, rem = curSumRem(drun)
-                    ok = rem == 0 and s == drun.target or rem > 0 and s < drun.target and drun.target - s >= rem
-                end
-
-                if ok and bt(idx + 1) then return true end
+                if bt(idx + 1) then return true end
                 sol[r][c] = -1
             end
         end
@@ -285,17 +269,6 @@ local function generateFromTemplate(tmpl)
                 if not in_across[r][c] or not in_down[r][c] then return nil end
             end
         end
-    end
-
-    for _, run in ipairs(across_runs) do
-        local lo = minSum(#run.cells)
-        local hi = maxSum(#run.cells)
-        run.target = lo + math.random(0, hi - lo)
-    end
-    for _, run in ipairs(down_runs) do
-        local lo = minSum(#run.cells)
-        local hi = maxSum(#run.cells)
-        run.target = lo + math.random(0, hi - lo)
     end
 
     local sol = {}
