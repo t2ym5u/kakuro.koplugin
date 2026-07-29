@@ -200,13 +200,11 @@ function KakuroBoardWidget:paintTo(bb, x, y)
                 if cell.down and cell.down > 0 then
                     local text = tostring(cell.down)
                     local tri_w = math.floor(cw / 2)
-                    local tri_h = math.floor(ch / 2)
                     local m    = RenderText:sizeUtf8Text(0, tri_w, self.clue_face, text, true, false)
                     local tw   = m.x
-                    local th   = m.y_bottom - m.y_top
                     local pad  = math.max(1, math.floor(math.min(cw, ch) / 14))
                     local tx   = cx + cw - tw - pad
-                    local ty   = cy + pad - m.y_top
+                    local ty   = cy + pad + m.y_top
                     RenderText:renderUtf8Text(bb, tx, ty, self.clue_face, text, true, false, Blitbuffer.COLOR_WHITE)
                 end
                 -- Across clue: bottom-left triangle
