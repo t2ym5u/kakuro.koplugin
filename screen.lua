@@ -108,6 +108,8 @@ function KakuroScreen:buildLayout()
         or  math.floor(sw * 0.9)
     local keypad_width = is_landscape and button_width or math.floor(sw * 0.75)
 
+    self.status_text:setMaxWidth(is_landscape and button_width or board_frame_size)
+
     -- Title bar with Options menu
     local title_bar = self:buildTitleBar(_("Kakuro"), function()
         return {
